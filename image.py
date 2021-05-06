@@ -79,18 +79,6 @@ def splitImage(img,name):
     height,width = img.shape[0],img.shape[1]
     v_split_num = int(0.1*height)
     h_split_num = int(0.1*width)
-    # v_padding = 0
-    # h_padding = 0
-    # if(height%10 is not 0):
-    #     temp_height = height
-    #     while(temp_height%10!=0):
-    #         v_padding+=1
-    #         temp_height+=1
-    # if(width%10 is not 0):
-    #     temp_width = width
-    #     while(temp_width%10!=0):
-    #         h_padding+=1
-    #         temp_width+=1
     for i in range(0,height//v_split_num):
         for j in range(0,width//h_split_num):
             image_map[j,i] = [[j*v_split_num,i*h_split_num],[(j+1)*v_split_num,(i+1)*h_split_num]]
