@@ -55,14 +55,15 @@ def padImage(img,name):
         result = np.full((final_height,final_width,channels), color, dtype=np.uint8)
 
         # compute center offset
-        xx = (final_width - width) // 2
-        yy = (final_height - height) // 2
+        # xx = (final_width - width) // 2
+        # yy = (final_height - height) // 2
 
         # copy img image into center of result image
-        result[yy:yy+height, xx:xx+width] = img
+        # result[yy:yy+height, xx:xx+width] = img
+        result[:height,:width] = img
 
         # save result
-        new_name = "centered_"+name
+        new_name = "corner_"+name
         cv2.imwrite(new_name, result)
         
 
@@ -85,22 +86,23 @@ def splitImage(img,name):
 
     # print(image_map[(0,8)],image_map[(0,9)])
     # cropImage(img,h_split_num,v_split_num)
-    # padImage(img,name)
-    sampleImage(img)
+    padImage(img,name)
+    # sampleImage(img)
 
 
 
     
 
     
-choice = int(input("1:Blank\t2:Half\t:3:Color "))
-# Load an color image in grayscale
+choice = int(input("1:Blank\t2:Half\t3:Color\t4:Small Iris"))
 if choice == 1:
     name = 'top_right_blank_Mavic_Full_PNG.png'
 elif choice == 2:
     name = 'mid_right_half_Mavic_Full_PNG.png'
 elif choice == 3:
     name = 'coconut_Mavic_Full_PNG.png'
+elif choice == 4:
+    name = '416_435.jpg'
 else:
     print("Error")
     exit()
