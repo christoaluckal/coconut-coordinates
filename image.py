@@ -14,7 +14,7 @@ def sampleImage(img):
     else:
         return True
 
-def padImage(img,name,default_pad):
+def padImage(img,default_pad):
     height,width,channels = img.shape
     # print(height,width)
     aspect_ratio = float(width/height)
@@ -40,6 +40,7 @@ def padImage(img,name,default_pad):
         # print(height_pad,width_pad)
         final_width = width+width_pad
         final_height = height+height_pad
+        print("Original Image Resolution to :"+str(height)+"x"+str(width))
         print("Image Padded to :"+str(final_height)+"x"+str(final_width))
         color = (255,255,255)
         result = np.full((final_height,final_width,channels), color, dtype=np.uint8)
@@ -52,7 +53,7 @@ def padImage(img,name,default_pad):
         # result[yy:yy+height, xx:xx+width] = img
         result[:height,:width] = img
         # save result
-        return result,name
+        return result
         
 # def getSplitFactor(padded_img,name):
 #     height,width,channels = padded_img.shape
@@ -99,7 +100,7 @@ def cropImage(img,h_split_num,v_split_num):
     # print(image_map)
 
 
-def splitImage(img,name,default_size): # Notice the inversion of notations
+def splitImage(img,default_size): # Notice the inversion of notations
     height,width = img.shape[0],img.shape[1]
     v_split_num = default_size[0]
     h_split_num = default_size[1]
@@ -117,30 +118,23 @@ def splitImage(img,name,default_size): # Notice the inversion of notations
 
     
 
-    
-choice = int(input("1:Blank\t2:Half\t3:Color\t4:Small Iris"))
-if choice == 1:
-    name = 'top_right_blank_Mavic_Full_PNG.png'
-elif choice == 2:
-    name = 'mid_right_half_Mavic_Full_PNG.png'
-elif choice == 3:
-    name = 'coconut_Mavic_Full_PNG.png'
-elif choice == 4:
-    name = '416_435.jpg'
-else:
-    print("Error")
-    exit()
+import os
+print(os.listdir(os.getcwd()))
+img_name = str(input("Image Name: "))
 
-img = cv2.imread('big.png',-1)
+img = cv2.imread(img_name)
 # imS = cv2.resize(img, (960, 540))
 # cv2.imshow('image',img)
 # cv2.waitKey(0)
 # cv2.destroyAllWindows()
 print("Standard image height and width?")
 default_size = int(input()),int(input())
-padded_img,name = padImage(img,'big.png',default_size)
+if default_size[0] > img.shape[0] or default_size[1] > img.shape[1]:
+    print("Cannot break image into smaller parts. Inputted size is bigger than image width or height")
+    exit()
+padded_img = padImage(img,default_size)
 # print("FINAL PAD:",padded_img.shape)
-splitImage(padded_img,name,default_size)
+splitImage(padded_img,default_size)
 
 
 
