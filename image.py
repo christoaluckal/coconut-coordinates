@@ -4,6 +4,10 @@ import cv2
 image_map = {} # This data structure is used to store coordinates of each sub-part
 # The format of image_map is: for (i,j)th part [(y1,x1),(y2,x2)] ie standard image format where (y1,x1) are top left and (y2,x2) are bottom right coordinates
 
+
+def getCleanBBList():
+    pass
+
 def sampleImage(img):
     height,width,channels = img.shape
     n_white_pix = np.sum(img == 255)
@@ -71,10 +75,11 @@ def padImage(img,default_pad):
     
 #     return 3648,5472
 
-def cropImage(img,h_split_num,v_split_num):
+def cropImage(img,h_split_num,v_split_num,op):
     white = 0
     sum_total = 0
     height,width,channel = img.shape
+    fin_img_list = []
     # print(height,v_split_num,width,h_split_num)
     # print(height//v_split_num)
     # print(width//h_split_num)
@@ -89,7 +94,9 @@ def cropImage(img,h_split_num,v_split_num):
             temp_img = img[y_min:y_max,x_min:x_max]
             if sampleImage(temp_img):
             # print("images/"+str(j)+str(i)+".jpg")
-                cv2.imwrite("images/"+str(i)+str(j)+".jpg",temp_img)
+                img_name = op+str(i)+str(j)+".jpg"
+                cv2.imwrite(img_name,temp_img)
+                fin_img_list.append(img_name)
             else:
                 white+=1
                 # print("Popping",(i,j))
@@ -98,9 +105,10 @@ def cropImage(img,h_split_num,v_split_num):
             sum_total+=1
     print("Total white percentage:",str((white/sum_total)*100))
     # print(image_map)
+    return fin_img_list
 
 
-def splitImage(img,default_size): # Notice the inversion of notations
+def splitImage(img,default_size,op): # Notice the inversion of notations
     height,width = img.shape[0],img.shape[1]
     v_split_num = default_size[0]
     h_split_num = default_size[1]
@@ -111,30 +119,31 @@ def splitImage(img,default_size): # Notice the inversion of notations
             # print([i,j],image_map[i,j])
         # print(image_map)
     # print(image_map)
-    cropImage(img,h_split_num,v_split_num)
+    img_name = cropImage(img,h_split_num,v_split_num,op)
     # sampleImage(img)
-
+    return img_name
 
 
     
+def breakImage(img_name,op):
+    # import os
+    # print(os.listdir(os.getcwd()))
+    # img_name = str(input("Image Name: "))
 
-import os
-print(os.listdir(os.getcwd()))
-img_name = str(input("Image Name: "))
-
-img = cv2.imread(img_name)
-# imS = cv2.resize(img, (960, 540))
-# cv2.imshow('image',img)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
-print("Standard image height and width?")
-default_size = int(input()),int(input())
-if default_size[0] > img.shape[0] or default_size[1] > img.shape[1]:
-    print("Cannot break image into smaller parts. Inputted size is bigger than image width or height")
-    exit()
-padded_img = padImage(img,default_size)
-# print("FINAL PAD:",padded_img.shape)
-splitImage(padded_img,default_size)
+    img = cv2.imread(img_name)
+    # imS = cv2.resize(img, (960, 540))
+    # cv2.imshow('image',img)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+    print("Standard image height and width?")
+    default_size = int(input()),int(input())
+    if default_size[0] > img.shape[0] or default_size[1] > img.shape[1]:
+        print("Cannot break image into smaller parts. Inputted size is bigger than image width or height")
+        exit()
+    padded_img = padImage(img,default_size)
+    # print("FINAL PAD:",padded_img.shape)
+    img_name_list = splitImage(padded_img,default_size,op)
+    return img_name_list
 
 
 
