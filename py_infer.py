@@ -20,7 +20,7 @@ os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID" # do not change anything in here
 # specify which device you want to work on.
 # Use "-1" to work on a CPU. Default value "0" stands for the 1st GPU that will be used
 os.environ["CUDA_VISIBLE_DEVICES"]="-1" # TODO: specify your computational device
-
+os.environ["OPENCV_IO_MAX_IMAGE_PIXELS"] = pow(2,40).__str__()
 
 # %%
 import tensorflow as tf # import tensorflow
@@ -368,6 +368,12 @@ def normalizeBB(boxlist,height,width,row_num,col_num):
     boxlist = floorBBCoordinates(boxlist)   
     return boxlist
 
+def writeBoxList(boxlist):
+    pred = open('fin_pred.txt','a')
+    for x in boxlist:
+        for y in x:
+            pred.write(str(y)+"\t")
+        pred.write("\n")
 # %%
 import time
 import image
@@ -399,13 +405,13 @@ else:
         key_val = "_"+row_num+"_"+col_num+"_"
         box_list = inference_with_plot([x],op_path,count,box_th=0.20)
         norm_box_list = normalizeBB(box_list,default_size[0],default_size[1],row_num,col_num)
-        print(norm_box_list)
+        writeBoxList(norm_box_list)
         count+=1
     end = time.time()
     print(end-start)
 # inference_as_raw_output(new_img,to_file=True,data="test")
 
-
+open('fin_pred.txt','a').write("_________________________________\n\n")
 # %%
 
 
