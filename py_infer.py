@@ -357,6 +357,7 @@ def inference_with_plot(path2images,outputs,count=0, box_th=0.33,iou_threshold=0
 # %%
 import time
 import image
+import math
 import sys
 args = sys.argv[1:]
 Image.MAX_IMAGE_PIXELS = None
@@ -370,7 +371,10 @@ if choice == 'n':
     start = time.time()
     box_list = inference_with_plot(t_img,op_path,box_th=0.20)
     end = time.time()
-    print(box_list)
+    height,width,channel = load_image_into_numpy_array(img_name).shape
+    for x in range(0,len(box_list)):
+        box_list[x] = [box_list[x][0]*height,box_list[x][1]*width,box_list[x][2]*height,box_list[x][3]*width]
+    box_list = [math.floor(x) for x in for y in box_list]
     print(end-start)
 else:
     start = time.time()
