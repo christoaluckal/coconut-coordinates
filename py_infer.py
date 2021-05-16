@@ -331,33 +331,46 @@ def inference_with_plot(path2images,outputs,count=0, box_th=0.33,iou_threshold=0
           if scores[i] > box_th:
             fin_boxes.append(boxes[i].tolist())
         if(len(fin_boxes)!=0):
-          label_id_offset = 1
-          image_np_with_detections = image_np.copy()
-          viz_utils.visualize_boxes_and_labels_on_image_array(
-                  image_np_with_detections,
-                  boxes,
-                  detections['detection_classes']+label_id_offset,
-                  scores,
-                  category_index,
-                  use_normalized_coordinates=True,
-                  max_boxes_to_draw=200,
-                  min_score_thresh=box_th,
-                  agnostic_mode=False,
-                  line_thickness=5)
+            label_id_offset = 1
+            image_np_with_detections = image_np.copy()
+            viz_utils.visualize_boxes_and_labels_on_image_array(
+                    image_np_with_detections,
+                    boxes,
+                    detections['detection_classes']+label_id_offset,
+                    scores,
+                    category_index,
+                    use_normalized_coordinates=True,
+                    max_boxes_to_draw=200,
+                    min_score_thresh=box_th,
+                    agnostic_mode=False,
+                    line_thickness=5)
 
           # plt.figure(figsize=(15,10))
           # plt.imshow(image_np_with_detections)
-          plt.imsave(outputs+'/op{}.png'.format(count),image_np_with_detections) #CHANGE
-          print('Done')
-          return fin_boxes
-        else:
-          break
+            plt.imsave(outputs+'/op{}.png'.format(count),image_np_with_detections) #CHANGE
+            print('Done')
+        return fin_boxes
 
+
+
+def floorBBCoordinates(boxlist):
+    import math
+    for box in boxlist:
+        for i in range(0,len(box)):
+            box[i] = math.floor(box[i])
+    return boxlist
+
+def normalizeBB(boxlist,height,width,row_num,col_num):
+    row_num = int(row_num)
+    col_num = int(col_num)
+    for x in range(0,len(boxlist)):
+        boxlist[x] = [(box_list[x][0]+row_num)*height,(box_list[x][1]+col_num)*width,(box_list[x][2]+row_num)*height,(box_list[x][3]+col_num)*width]     
+    boxlist = floorBBCoordinates(boxlist)   
+    return boxlist
 
 # %%
 import time
 import image
-import math
 import sys
 args = sys.argv[1:]
 Image.MAX_IMAGE_PIXELS = None
@@ -374,15 +387,19 @@ if choice == 'n':
     height,width,channel = load_image_into_numpy_array(img_name).shape
     for x in range(0,len(box_list)):
         box_list[x] = [box_list[x][0]*height,box_list[x][1]*width,box_list[x][2]*height,box_list[x][3]*width]
-    box_list = [math.floor(x) for x in for y in box_list]
+    box_list = floorBBCoordinates(box_list)
     print(end-start)
 else:
     start = time.time()
-    img_name_list = image.breakImage(t_img[0],sp_path)
-    # print(img_list)
+    img_name_list,image_map,default_size = image.breakImage(t_img[0],sp_path)
+    print(image_map)
     for x in img_name_list:
+        row_num = str(x).split('_')[1]
+        col_num = str(x).split('_')[2]
+        key_val = "_"+row_num+"_"+col_num+"_"
         box_list = inference_with_plot([x],op_path,count,box_th=0.20)
-        print(box_list)
+        norm_box_list = normalizeBB(box_list,default_size[0],default_size[1],row_num,col_num)
+        print(norm_box_list)
         count+=1
     end = time.time()
     print(end-start)

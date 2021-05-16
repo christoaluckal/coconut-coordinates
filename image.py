@@ -88,19 +88,19 @@ def cropImage(img,h_split_num,v_split_num,op):
     for i in range(0,height//v_split_num):
         for j in range(0,width//h_split_num):
             # print(i,j)
-            x_min,y_min = image_map[(i,j)][0][1],image_map[(i,j)][0][0]
-            x_max,y_max = image_map[(i,j)][1][1],image_map[(i,j)][1][0]
+            x_min,y_min = image_map["_"+str(i)+"_"+str(j)+"_"][0][1],image_map["_"+str(i)+"_"+str(j)+"_"][0][0]
+            x_max,y_max = image_map["_"+str(i)+"_"+str(j)+"_"][1][1],image_map["_"+str(i)+"_"+str(j)+"_"][1][0]
             # print([i,j],image_map[(i,j)],x_min,y_min,x_max,y_min) #IMPORTANT  image_map stores into standard image format while XY min/max prints as human readable ie row first then column
             temp_img = img[y_min:y_max,x_min:x_max]
             if sampleImage(temp_img):
             # print("images/"+str(j)+str(i)+".jpg")
-                img_name = op+str(i)+str(j)+".jpg"
+                img_name = op+"_"+str(i)+"_"+str(j)+"_"+".jpg"
                 cv2.imwrite(img_name,temp_img)
                 fin_img_list.append(img_name)
             else:
                 white+=1
                 # print("Popping",(i,j))
-                image_map.pop((i,j))
+                image_map.pop("_"+str(i)+"_"+str(j)+"_")
             # print("End") 
             sum_total+=1
     print("Total white percentage:",str((white/sum_total)*100))
@@ -115,7 +115,7 @@ def splitImage(img,default_size,op): # Notice the inversion of notations
     for i in range(0,height//v_split_num): # i is the row iterator ie ith row of a particular column
         for j in range(0,width//h_split_num): # j is the column iterator ie jth row of a particular IMAGE
             # image_map[j,i] = [[j*h_split_num,i*v_split_num],[(j+1)*h_split_num,(i+1)*v_split_num]]
-            image_map[i,j] = [[i*v_split_num,j*h_split_num],[(i+1)*v_split_num,(j+1)*h_split_num]]
+            image_map["_"+str(i)+"_"+str(j)+"_"] = [[i*v_split_num,j*h_split_num],[(i+1)*v_split_num,(j+1)*h_split_num]]
             # print([i,j],image_map[i,j])
         # print(image_map)
     # print(image_map)
@@ -143,7 +143,7 @@ def breakImage(img_name,op):
     padded_img = padImage(img,default_size)
     # print("FINAL PAD:",padded_img.shape)
     img_name_list = splitImage(padded_img,default_size,op)
-    return img_name_list
+    return img_name_list,image_map,default_size
 
 
 
