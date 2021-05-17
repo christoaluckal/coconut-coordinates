@@ -1,1 +1,2 @@
+TIFF to JPG Conversion code
 gdal_translate -of JPEG -scale -co worldfile=no ~/Downloads/DBCA_S1_Ortho.tif ~/Downloads/DBCAoutput.jpg

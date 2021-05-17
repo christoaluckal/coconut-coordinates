@@ -2,12 +2,9 @@ import numpy as np
 import cv2
 
 image_map = {} # This data structure is used to store coordinates of each sub-part
-# The format of image_map is: for (i,j)th part [(y1,x1),(y2,x2)] ie standard image format where (y1,x1) are top left and (y2,x2) are bottom right coordinates
+# The format of image_map is: for (ij)th part [(y1,x1),(y2,x2)] ie standard image format where (y1,x1) are top left and (y2,x2) are bottom right coordinates
 
-
-def getCleanBBList():
-    pass
-
+# Calculate the percent of white pixels in the image and reject if over threshold
 def sampleImage(img):
     height,width,channels = img.shape
     n_white_pix = np.sum(img == 255)
@@ -18,6 +15,7 @@ def sampleImage(img):
     else:
         return True
 
+# Since images need to be in a defined standard, we pad the image till it achieves the desired size
 def padImage(img,default_pad):
     height,width,channels = img.shape
     # print(height,width)
@@ -55,26 +53,13 @@ def padImage(img,default_pad):
 
         # copy img image into center of result image
         # result[yy:yy+height, xx:xx+width] = img
+
+        # Bottom-Right Offset
         result[:height,:width] = img
         # save result
         return result
         
-# def getSplitFactor(padded_img,name):
-#     height,width,channels = padded_img.shape
-#     base_size = 0
-#     pad_factor = 0
-#     if width < 10000:
-#         base_size = 10
-#         pad_factor = 1
-#     elif width < 20000:
-#         base_size = 5
-#         pad_factor = 2
-#     else:
-#         base_size = 2
-#         pad_factor = 3
-    
-#     return 3648,5472
-
+# This function reads the image array, number of horizontal and vertical splits and the output directory
 def cropImage(img,h_split_num,v_split_num,op):
     white = 0
     sum_total = 0
@@ -107,7 +92,7 @@ def cropImage(img,h_split_num,v_split_num,op):
     # print(image_map)
     return fin_img_list
 
-
+# This function reads the padded image and the inputted default size to create an image map which maps the ij th element to the top left and bottom right coordinates
 def splitImage(img,default_size,op): # Notice the inversion of notations
     height,width = img.shape[0],img.shape[1]
     v_split_num = default_size[0]
@@ -124,24 +109,15 @@ def splitImage(img,default_size,op): # Notice the inversion of notations
     return img_name
 
 
-    
+# Main driver function that takes the image path and output path and splits the image returning the split names, map and size  
 def breakImage(img_name,op):
-    # import os
-    # print(os.listdir(os.getcwd()))
-    # img_name = str(input("Image Name: "))
-
     img = cv2.imread(img_name)
-    # imS = cv2.resize(img, (960, 540))
-    # cv2.imshow('image',img)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
     print("Standard image height and width?")
     default_size = int(input()),int(input())
     if default_size[0] > img.shape[0] or default_size[1] > img.shape[1]:
         print("Cannot break image into smaller parts. Inputted size is bigger than image width or height")
         exit()
     padded_img = padImage(img,default_size)
-    # print("FINAL PAD:",padded_img.shape)
     img_name_list = splitImage(padded_img,default_size,op)
     return img_name_list,image_map,default_size
 

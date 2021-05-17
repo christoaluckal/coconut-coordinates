@@ -66,9 +66,13 @@ from object_detection.builders import model_builder
 # NOTE: your current working directory should be Tensorflow.
 
 # TODO: specify two pathes: to the pipeline.config file and to the folder with trained model.
-path2config ='/home/christo/Desktop/sshrepo/coconut-detection/workspace_neptune/models/my_ssd/pipeline.config' #CHANGE
-path2model = '/home/christo/Desktop/sshrepo/coconut-detection/workspace_neptune/exported_models/' #CHANGE
-
+# path2config ='/home/christo/Desktop/sshrepo/coconut-detection/workspace_neptune/models/my_ssd/pipeline.config' #CHANGE
+# path2model = '/home/christo/Desktop/sshrepo/coconut-detection/workspace_neptune/exported_models/' #CHANGE
+import sys
+args = sys.argv[1:]
+path2config = args[0]
+path2model = args[1]
+path2checkpoint = args[2]
 
 # %%
 # do not change anything in this cell
@@ -79,14 +83,15 @@ detection_model = model_builder.build(model_config=model_config, is_training=Fal
 
 # %%
 ckpt = tf.compat.v2.train.Checkpoint(model=detection_model)
-ckpt.restore('/home/christo/Desktop/sshrepo/coconut-detection/workspace_neptune/exported_models/checkpoint/ckpt-0').expect_partial() #CHANGE
+ckpt.restore(path2checkpoint+'ckpt-0').expect_partial() #CHANGE
 
 # %% [markdown]
 # Next, path to label map should be provided. Category index will be created based on labal map file
 
 
 # %%
-path2label_map = '/home/christo/Desktop/sshrepo/coconut-detection/workspace_neptune/data/label_map.pbtxt' #CHANGE
+# path2label_map = '/home/christo/Desktop/sshrepo/coconut-detection/workspace_neptune/data/label_map.pbtxt' #CHANGE
+path2label_map = args[3]
 category_index = label_map_util.create_category_index_from_labelmap(path2label_map,use_display_name=True)
 
 # %% [markdown]
@@ -347,7 +352,7 @@ def inference_with_plot(path2images,outputs,count=0, box_th=0.33,iou_threshold=0
 
           # plt.figure(figsize=(15,10))
           # plt.imshow(image_np_with_detections)
-            plt.imsave(outputs+'/op{}.png'.format(count),image_np_with_detections) #CHANGE
+            plt.imsave(outputs+'op{}.png'.format(count),image_np_with_detections) #CHANGE
             print('Done')
         return fin_boxes
 
@@ -369,7 +374,7 @@ def normalizeBB(boxlist,height,width,row_num,col_num):
     return boxlist
 
 def writeBoxList(boxlist):
-    pred = open('fin_pred.txt','a')
+    pred = open(file_name,'a')
     for x in boxlist:
         for y in x:
             pred.write(str(y)+"\t")
@@ -377,12 +382,12 @@ def writeBoxList(boxlist):
 # %%
 import time
 import image
-import sys
-args = sys.argv[1:]
+
 Image.MAX_IMAGE_PIXELS = None
-img_name = args[0]
-op_path = args[1]
-sp_path = args[2]
+img_name = args[4]
+op_path = args[5]
+sp_path = args[6]
+file_name = args[7]
 count = 0
 t_img = [img_name] #CHANGE
 choice = input(print("Do you want to break up the image? y/n"))
@@ -401,8 +406,9 @@ else:
     img_name_list,image_map,default_size = image.breakImage(t_img[0],sp_path)
     print(image_map)
     for x in img_name_list:
-        row_num = str(x).split('_')[1]
-        col_num = str(x).split('_')[2]
+        print(x)
+        row_num = str(x).split('_')[2]
+        col_num = str(x).split('_')[3]
         key_val = "_"+row_num+"_"+col_num+"_"
         box_list = inference_with_plot([x],op_path,count,box_th=0.20)
         norm_box_list = normalizeBB(box_list,default_size[0],default_size[1],row_num,col_num)
@@ -412,7 +418,7 @@ else:
     print(end-start)
 # inference_as_raw_output(new_img,to_file=True,data="test")
 
-open('fin_pred.txt','a').write("_________________________________\n\n")
+open(file_name,'a').write("_________________________________\n\n")
 # %%
 
 

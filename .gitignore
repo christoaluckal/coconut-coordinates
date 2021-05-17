@@ -1,5 +1,6 @@
-big.png
 *.png
 *.jpg
 __pycache__/
 *.tif
+my_model/*
+exported_models/*
