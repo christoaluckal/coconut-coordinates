@@ -1,4 +1,4 @@
-# image-manipulation
+# coconut-coordinates
 Download the files [here](https://1drv.ms/u/s!AiSJsfSikINmg40IF2dxOpKxb9LB3Q?e=g4r5Qd)<br>
 Unzip as is
 1.  Run the code <br> `python3 py_infer.py my_model/pipeline.config my_model/ exported_models/ my_model/label_map.pbtxt <image> outputs/predictions/ outputs/cropped_images/ outputs/text_files/bounding_box.txt ` <br>
