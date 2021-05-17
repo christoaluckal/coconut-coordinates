@@ -2,6 +2,7 @@
 Download the files [here](https://1drv.ms/u/s!AiSJsfSikINmg40IF2dxOpKxb9LB3Q?e=g4r5Qd)<br>
 Unzip as is
 1.  Run the code <br> `python3 py_infer.py my_model/pipeline.config my_model/ exported_models/ my_model/label_map.pbtxt <image> outputs/predictions/ outputs/cropped_images/ outputs/text_files/bounding_box.txt ` <br>
+    a. Input `y` if cropping is necessary, input the height and width (Standard DJI height x width is 3648x5472) <br>
 2.  The outputted files will be saved as: <br>
     a.  Cropped Images at `outputs/cropped_images` <br>
     b.  Inferenced Images at `outputs/predictions/` <br>
