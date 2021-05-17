@@ -4,16 +4,16 @@ import affine
 import sys
 import time
 demdata = gdal.Open(str(sys.argv[1]))
-demarray = np.array(demdata.GetRasterBand(1).ReadAsArray())
-dem_width,dem_height = demarray.shape
+# demarray = np.array(demdata.GetRasterBand(1).ReadAsArray())
+# dem_width,dem_height = demarray.shape
 # print(dem_width,dem_height)
-# band = demdata.GetRasterBand(1)
+band = demdata.GetRasterBand(1)
 # block_sizes = band.GetBlockSize()
 # x_block_size = block_sizes[0]
-# y_block_size = 5
+# y_block_size = block_sizes[1]
 # xsize = band.XSize
 # ysize = band.YSize
-# store = []
+# # store = []
 # def read_raster():
 #     raster = str(sys.argv[1])
 #     ds = gdal.Open(raster)
@@ -31,19 +31,14 @@ dem_width,dem_height = demarray.shape
 #                 cols = x_block_size
 #             else:
 #                 cols = xsize - x
-#             print(x,y,cols,rows)
-#             # time.sleep(1)
+#             print(x, y, cols, rows)
 #             array = band.ReadAsArray(x, y, cols, rows)
-#             store.append(array)
+#             # print(array)
 #             blocks += 1
-#             print(blocks)
+#             # print(blocks)
 #     band = None
 #     ds = None
 #     # print "{0} blocks size {1} x {2}:".format(blocks, x_block_size, y_block_size)
-
-# read_raster()
-# # 10661	10705	10891	10940
-# # print(store)
 """
 Temporary Onclicking Function. Only works with DEM but cannot see anything.
 Ortho too big and coordinates dont match. TODO Fix this
@@ -82,7 +77,6 @@ End of Sample
 
 # Affine Transforms to Convert X,Y to LatLon and vice-versa
 affine_transform = affine.Affine.from_gdal(*demdata.GetGeoTransform())
-
 # Function to get the LatLon of an X,Y coords. 
 # CAUTION: Affine reverses values, maintain order
 def getLonLat(x_coord,y_coord):
@@ -99,45 +93,37 @@ def getXY(lat,lon):
 
 # Processing Function
 # TODO Use more complicated functions instead of max
-def processRegion(x_min,y_min,x_max,y_max):
+def processRegion(x_min,y_min,array):
     # print(x_min,y_min,x_max,y_max,dem_width,dem_height)
-    try:
-        assert isinstance(x_min,int) and isinstance(y_min,int) and isinstance(x_max,int) and isinstance(y_max,int)
-    except:
-        print("ERROR: Region Coords must be integers")
-        return
-    try:
-        assert x_min > 0 and y_min > 0 and  x_max <= dem_width  and y_max <= dem_height
-    except:
-        print("ERROR: Out of Bounds")
-        return
-
-    # Assuming getting max
-    region = []
-    for row in range(x_min,x_max):
-        for col in range(y_min,y_max):
-            region.append([row,col,demarray[col][row]])
-
-    # 
-    region_heights = np.asarray(region)
-    heights = region_heights[:, [2]]
-    index_of_highest = np.where(heights == heights.max())[0][0]
-    x_highest,y_highest = region[index_of_highest][0],region[index_of_highest][1]
+    index_of_highest = list(np.unravel_index(np.argmax(array, axis=None), array.shape))
+    x_highest,y_highest = index_of_highest[0],index_of_highest[1]
+    print(array.shape,x_highest,y_highest)
     height = open('coords_height.txt','a')
-    height.write(str(getLonLat(x_highest,y_highest))+"  "+str(heights[index_of_highest][0])+"\n")
+    height.write(str(getLonLat(x_min+x_highest,y_min+y_highest))+"  "+str(array[x_highest][y_highest])+"\n")
+    # print(str(getLonLat(x_min+x_highest,y_min+y_highest))+"  "+str(array[x_highest][y_highest]))
 
+# 22022	5611	22398	6053	
 
+# ReadAsArray(x_min,y_min,x_len,y_len)
+
+# indices = np.where(area == area.max())
 
 # Temporarily Passing Coordinates directly.
 # TODO minn,maxx will be replaced programatically
-# min_coords = getXY(19.487784,73.140601)
-# max_coords = getXY(19.486528,73.141831)
+# min_coords = getXY(15.1079367,74.1492764)
+# max_coords = getXY(15.1077252,74.1495008)
 # print(min_coords,max_coords)
+# print(getLonLat(min_coords[0],min_coords[1]))
+# area = band.ReadAsArray(22159,24117,23249-22159,24997-24117)
+# processRegion(22159,24117,area)
+
+
 coords = open('raw.txt','r')
 for x in coords.readlines():
     li = x.split('\t')
     y_min,x_min,y_max,x_max = int(li[0]),int(li[1]),int(li[2]),int(li[3])
-    processRegion(x_min,y_min,x_max,y_max)
+    area = band.ReadAsArray(x_min,y_min,x_max-x_min,y_max-y_min)
+    processRegion(x_min,y_min,area)
 
 # 10661	10705	10891	10940
 

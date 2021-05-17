@@ -394,6 +394,7 @@ if choice == 'n':
     for x in range(0,len(box_list)):
         box_list[x] = [box_list[x][0]*height,box_list[x][1]*width,box_list[x][2]*height,box_list[x][3]*width]
     box_list = floorBBCoordinates(box_list)
+    writeBoxList(box_list)
     print(end-start)
 else:
     start = time.time()
