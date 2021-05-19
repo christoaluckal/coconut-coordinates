@@ -235,7 +235,33 @@ def split(file_xml,input_dir,output_dir):
         createAnnotationXML(cfolder,cfilename,ofilename,cpath,cwidth,cheight,y,region,output_dir)
 
 
+def YoloFormat(file_xml,input_dir,output_dir):
+    tags_to_search = ['folder','filename','path','width','height']
+    # createAnnoatationXML()
+    tree = ET.parse(input_dir+file_xml)
+    file_map = {}
+    count = 1
+
+    base_data = getAnnotatedData(tree,tags_to_search)
+    width = int(base_data["width"])
+    height = int(base_data["height"])
+    root = tree.getroot()
+    xmins = root.findall('object/bndbox/xmin')
+    xmaxs = root.findall('object/bndbox/xmax')
+    ymins = root.findall('object/bndbox/ymin')
+    ymaxs = root.findall('object/bndbox/ymax')
+    for a,b,c,d in zip(ymins,xmins,ymaxs,xmaxs):
+        y_min,x_min,y_max,x_max = int(a.text),int(b.text),int(c.text),int(d.text)
+        cent_x = (x_min+x_max)/(2*width)
+        cent_y = (y_min+y_max)/(2*height)
+        yolo_height = (y_max-y_min)/height
+        yolo_width = (x_max-x_min)/width
+        with open(output_dir+file_xml[:-3]+"txt",'a') as writer:
+            writer.write("0 "+str(cent_x)+" "+str(cent_y)+" "+str(yolo_width)+" "+str(yolo_height)+"\n")
+
 # python3 train_split.py input/ output/
+
+# PASCAL VOC
 import sys
 import os
 args = sys.argv[1:]
@@ -258,3 +284,19 @@ for x in input_xmls:
 end = time.time()
 
 print(end-start)
+
+# PASCAL VOC TO YOLO
+# import sys
+# import os
+# args = sys.argv[1:]
+# input_dir = args[0]
+# output_dir = args[1]
+# input_files = os.listdir(input_dir)
+# input_xmls = []
+# input_jpgs = []
+# for x in input_files:
+#     if x.endswith(".xml"):
+#         input_xmls.append(x)
+
+# for x in input_xmls:
+#     YoloFormat(x,input_dir,output_dir)

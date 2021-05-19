@@ -6,3 +6,4 @@ my_model/*
 exported_models/*
 xml_testing/coconut_anno/*
 xml_testing/outputs/*
+xml_testing/split_annotated.zip
