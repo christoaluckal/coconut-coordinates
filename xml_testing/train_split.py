@@ -40,6 +40,11 @@ def testDraw(bblist,op):
         cv2.rectangle(result, (x1, y1), (x2, y2), (255,0,0), 2)
     cv2.imwrite(op+".JPG",result)
 
+
+# |  00       |   01      |    02     
+# |  10       |   11      |    12     
+# |  20       |   21      |    22     
+# save the bounding boxes in the corresponding 9 possibilities using their min and max coords
 def getBBKeys(box_list,width,height):
     box_key = {}
     for i in range(0,3):
@@ -74,6 +79,7 @@ def getBBKeys(box_list,width,height):
                 box_key["2_2"].append([y_min,x_min,y_max,x_max])
     return box_key
 
+# The bounding boxes for the smaller ones are normalised so that their coordinates will match the image borders
 def normalizeBBImgs(box_key,width,height):
     for x,y in box_key.items():
         temp = x.split("_")
@@ -88,7 +94,7 @@ def normalizeBBImgs(box_key,width,height):
             else:
                 bb.append(0)
 
-
+# Get the main image metadata
 def getAnnotatedData(tree,tag):
     xpath_dict = {}
     xpath_dict["annotation"] = '/annotation'
@@ -118,8 +124,8 @@ def getAnnotatedData(tree,tag):
         op[x] = statlist[0].text
     return op
 
-
-def createAnnotationXML(cfolder,cfilename,cpath,cwidth,cheight,objects,region):
+# Take the inputted metadata from the main image and various other variables to save the sub XML and JPGs
+def createAnnotationXML(cfolder,cfilename,ofilename,cpath,cwidth,cheight,objects,region,output_dir):
     if len(objects)!=0:
         result = np.full((cheight,cwidth,channels), color, dtype=np.uint8)
         y_min,x_min,y_max,x_max = region
@@ -155,17 +161,16 @@ def createAnnotationXML(cfolder,cfilename,cpath,cwidth,cheight,objects,region):
                                     xml_declaration=False,
                                     encoding='UTF-8')
 
-        with open(filename[:-4]+".xml", "wb") as writer:
+        with open(output_dir+ofilename[:-4]+".xml", "wb") as writer:
             writer.write(xml_object)
-        cv2.imwrite(cfilename,result)
+        cv2.imwrite(output_dir+ofilename,result)
     else:
         pass
     
+# Just a simple drawing function
 def splitDraw(file_xml,op):
     tags_to_search = ['folder','filename','path','width','height']
     # createAnnoatationXML()
-
-
     tree = ET.parse(file_xml)
     file_map = {}
     count = 1
@@ -188,10 +193,10 @@ def splitDraw(file_xml,op):
         main_bb.append([int(a.text),int(b.text),int(c.text),int(d.text)])
     testDraw(main_bb,op)
 
-def split(file_xml):
+# Main splitting function. Input is the directory with the XMLs and JPGs. Output is directory where sub XMLs and JPGs will be saved
+def split(file_xml,input_dir,output_dir):
     tags_to_search = ['folder','filename','path','width','height']
     # createAnnoatationXML()
-
 
     tree = ET.parse(file_xml)
     file_map = {}
@@ -217,8 +222,9 @@ def split(file_xml):
     normalizeBBImgs(main_bb_keys,width,height)
     for x,y in main_bb_keys.items():
         cfolder = base_data["folder"]
-        cfilename = base_data["filename"][:-4]+"_"+file_map[x]+".JPG"
-        cpath = base_data["path"][:-4]+"_"+file_map[x]+".JPG"
+        cfilename = input_dir+base_data["filename"][:-4]+"_"+file_map[x]+".JPG"
+        ofilename = base_data["filename"][:-4]+"_"+file_map[x]+".JPG"
+        cpath = input_dir[:-1]+base_data["path"][:-4]+"_"+file_map[x]+".JPG"
         cwidth = int(width/2)
         cheight = int(height/2)
         temp = x.split("_")
@@ -226,10 +232,29 @@ def split(file_xml):
         corner_y = int((yfactor/2)*height/2)
         corner_x = int((xfactor/2)*width/2)
         region = (corner_y,corner_x,corner_y+cheight,corner_x+cwidth)
-        createAnnotationXML(cfolder,cfilename,cpath,cwidth,cheight,y,region)
+        createAnnotationXML(cfolder,cfilename,ofilename,cpath,cwidth,cheight,y,region,output_dir)
 
-split("DJI_0859.xml")
 
-splitDraw("DJI_0859_1.xml","1")
-# split("DJI_0859_7.xml","7")
-# split("DJI_0859_9.xml","9")
+# python3 train_split.py input/ output/
+import sys
+import os
+args = sys.argv[1:]
+input_dir = args[0]
+output_dir = args[1]
+import time
+start = time.time()
+input_files = os.listdir(input_dir)
+input_xmls = []
+input_jpgs = []
+for x in input_files:
+    if x.endswith(".xml"):
+        input_xmls.append(x)
+        input_jpgs.append(str(x)[:-3]+"JPG")
+
+for x in input_xmls:
+    # print(input_dir+x)
+    split(input_dir+x,input_dir,output_dir)
+
+end = time.time()
+
+print(end-start)

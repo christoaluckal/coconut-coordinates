@@ -4,3 +4,5 @@ __pycache__/
 *.tif
 my_model/*
 exported_models/*
+xml_testing/coconut_anno/*
+xml_testing/outputs/*
