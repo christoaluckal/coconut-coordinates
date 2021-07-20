@@ -15,7 +15,7 @@ def sampleImage(img):
     else:
         return True
 
-# Since images need to be in a defined standard, we pad the image till it achieves the desired size
+# Since images need to be in a defined standard, we pad the image till it achieves the desired size. default_pad is the desired crop dimensions
 def padImage(img,default_pad):
     height,width,channels = img.shape
     # print(height,width)
@@ -24,6 +24,7 @@ def padImage(img,default_pad):
         print("Image is not close to standard aspect ratio\n")
         exit()
     else:
+        # Calculate the padding pixel number required for height and width
         temp_width = width
         width_pad = 0
         temp_height = height
@@ -61,10 +62,10 @@ def padImage(img,default_pad):
         
 # This function reads the image array, number of horizontal and vertical splits and the output directory
 def cropImage(img,h_split_num,v_split_num,op):
-    white = 0
-    sum_total = 0
+    white = 0 # Total number of white pixels
+    sum_total = 0 # Total number of pixels
     height,width,channel = img.shape
-    fin_img_list = []
+    fin_img_list = [] # Final list that contains the names of the cropped images with a unique row-column identifying number
     # print(height,v_split_num,width,h_split_num)
     # print(height//v_split_num)
     # print(width//h_split_num)
@@ -77,6 +78,7 @@ def cropImage(img,h_split_num,v_split_num,op):
             x_max,y_max = image_map["_"+str(i)+"_"+str(j)+"_"][1][1],image_map["_"+str(i)+"_"+str(j)+"_"][1][0]
             # print([i,j],image_map[(i,j)],x_min,y_min,x_max,y_min) #IMPORTANT  image_map stores into standard image format while XY min/max prints as human readable ie row first then column
             temp_img = img[y_min:y_max,x_min:x_max]
+            # Sample the images and reject the mostly empty/white image parts
             if sampleImage(temp_img):
             # print("images/"+str(j)+str(i)+".jpg")
                 img_name = op+"_"+str(i)+"_"+str(j)+"_"+".jpg"
@@ -95,8 +97,8 @@ def cropImage(img,h_split_num,v_split_num,op):
 # This function reads the padded image and the inputted default size to create an image map which maps the ij th element to the top left and bottom right coordinates
 def splitImage(img,default_size,op): # Notice the inversion of notations
     height,width = img.shape[0],img.shape[1]
-    v_split_num = default_size[0]
-    h_split_num = default_size[1]
+    v_split_num = default_size[0] # The height of the cropped output
+    h_split_num = default_size[1] # The width of the cropped output
     for i in range(0,height//v_split_num): # i is the row iterator ie ith row of a particular column
         for j in range(0,width//h_split_num): # j is the column iterator ie jth row of a particular IMAGE
             # image_map[j,i] = [[j*h_split_num,i*v_split_num],[(j+1)*h_split_num,(i+1)*v_split_num]]
@@ -117,7 +119,9 @@ def breakImage(img_name,op):
     if default_size[0] > img.shape[0] or default_size[1] > img.shape[1]:
         print("Cannot break image into smaller parts. Inputted size is bigger than image width or height")
         exit()
+    # We pad the image to the desired size so that the output is uniform
     padded_img = padImage(img,default_size)
+    # Split the image and retain the coordinates of the split image as a row,col pair
     img_name_list = splitImage(padded_img,default_size,op)
     return img_name_list,image_map,default_size
 

@@ -1,3 +1,7 @@
+# THE INFERENCE CODE IS TAKEN FROM https://neptune.ai/blog/tensorflow-object-detection-api-best-practices-to-training-evaluation-deployment and customized for the application
+# ALSO https://app.neptune.ai/anton-morgunov/tf-test/n/model-for-inference-36c9b0c4-8d20-4d5a-aa54-5240cc8ce764/6f67c0e3-283c-45de-ae56-405aecd736c0
+
+
 # To add a new cell, type '# %%'
 # To add a new markdown cell, type '# %% [markdown]'
 # %%
@@ -20,6 +24,7 @@ os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID" # do not change anything in here
 # specify which device you want to work on.
 # Use "-1" to work on a CPU. Default value "0" stands for the 1st GPU that will be used
 os.environ["CUDA_VISIBLE_DEVICES"]="-1" # TODO: specify your computational device
+# Change the environmental variable to allow storing large images
 os.environ["OPENCV_IO_MAX_IMAGE_PIXELS"] = pow(2,40).__str__()
 
 # %%
@@ -70,9 +75,9 @@ from object_detection.builders import model_builder
 # path2model = '/home/christo/Desktop/sshrepo/coconut-detection/workspace_neptune/exported_models/' #CHANGE
 import sys
 args = sys.argv[1:]
-path2config = args[0]
-path2model = args[1]
-path2checkpoint = args[2]
+path2config = args[0] # Path to the pipeline.config file for your model. See instructions file to understand
+path2model = args[1] # Path to the model for params. See instructions file to understand
+path2checkpoint = args[2] # Path to the exported model. See instructions file to understand
 
 # %%
 # do not change anything in this cell
@@ -329,8 +334,8 @@ def inference_with_plot(path2images,outputs,count=0, box_th=0.33,iou_threshold=0
         # detection_classes should be ints.
         detections['detection_classes'] = detections['detection_classes'].astype(np.int64)
         selected_indices = tf.image.non_max_suppression(boxes=detections['detection_boxes'], max_output_size=100, iou_threshold=0.01,scores=detections['detection_scores'])
-        boxes = tf.gather(detections['detection_boxes'],selected_indices).numpy()
-        scores = tf.gather(detections['detection_scores'],selected_indices).numpy()
+        boxes = tf.gather(detections['detection_boxes'],selected_indices).numpy() # Get the box coordinates from Tensorflow
+        scores = tf.gather(detections['detection_scores'],selected_indices).numpy() # Get the scores for specific boxes from Tensorflow
         fin_boxes = []
         for i in range(0,scores.shape[0]):
           if scores[i] > box_th:
@@ -357,7 +362,7 @@ def inference_with_plot(path2images,outputs,count=0, box_th=0.33,iou_threshold=0
         return fin_boxes
 
 
-
+# Floor the coordinates from the inference output
 def floorBBCoordinates(boxlist):
     import math
     for box in boxlist:
@@ -365,6 +370,7 @@ def floorBBCoordinates(boxlist):
             box[i] = math.floor(box[i])
     return boxlist
 
+# Normalize the coordinates such that the local coordinates will be transformed to the global coordinates using the row number and column number
 def normalizeBB(boxlist,height,width,row_num,col_num):
     row_num = int(row_num)
     col_num = int(col_num)
@@ -383,34 +389,39 @@ def writeBoxList(boxlist):
 import time
 import image
 
+# Since this code is supposed to use large images, we remove the pixel count limit
 Image.MAX_IMAGE_PIXELS = None
-img_name = args[4]
-op_path = args[5]
-sp_path = args[6]
-file_name = args[7]
-count = 0
-t_img = [img_name] #CHANGE
+img_name = args[4] #Image name eg. DBCAOutput.jpg
+op_path = args[5] #Output path for the inference
+sp_path = args[6] #Output directory of cropped images images (if any)
+file_name = args[7] #Bounding box (BB) name
+count = 0 #Image Counter
+t_img = [img_name] #The inference code needs the image names in a list
 choice = input(print("Do you want to break up the image? y/n"))
 if choice == 'n':
     start = time.time()
-    box_list = inference_with_plot(t_img,op_path,box_th=0.20)
+    box_list = inference_with_plot(t_img,op_path,box_th=0.20) #Inference code with 20% confidence
     end = time.time()
     height,width,channel = load_image_into_numpy_array(img_name).shape
     for x in range(0,len(box_list)):
         box_list[x] = [box_list[x][0]*height,box_list[x][1]*width,box_list[x][2]*height,box_list[x][3]*width]
-    box_list = floorBBCoordinates(box_list)
-    writeBoxList(box_list)
+    box_list = floorBBCoordinates(box_list) #Flooring the BB coordinates
+    writeBoxList(box_list) #Write the BB coordinates to a file
     print(end-start)
 else:
+    # Here the image is very large and inference would be difficult so we break the image while retaining the global coordinates of the cropped images
     start = time.time()
+    # Get the list of images and the size of the cropped image
     img_name_list,image_map,default_size = image.breakImage(t_img[0],sp_path)
     print(image_map)
     for x in img_name_list:
         print(x)
-        row_num = str(x).split('_')[2]
-        col_num = str(x).split('_')[3]
+        # The image names stored in img_name_list are in a particular format eg. DJI_599_0_1_.jpg, hence we must extract the required details
+        row_num = str(x).split('_')[2] # Get the row number for the split image from the global so the first part would be 0.....(original_width/desired_width)
+        col_num = str(x).split('_')[3] # Get the column number for the split image from the global so the first part would be 0.....(original_height/desired_height)
         key_val = "_"+row_num+"_"+col_num+"_"
         box_list = inference_with_plot([x],op_path,count,box_th=0.20)
+        # Since the inference is run on parts of the original image, the inference output coordinates will be local in nature and hence we need to normalize them for the global image
         norm_box_list = normalizeBB(box_list,default_size[0],default_size[1],row_num,col_num)
         writeBoxList(norm_box_list)
         count+=1

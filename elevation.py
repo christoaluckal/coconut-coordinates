@@ -1,3 +1,7 @@
+# In this code we take the DEM file, which is ideally the same size as the JPG/PNG image on which inference was run. Since the output of the inference code are the coordinates
+# of the point with tree, we want to find the highest elevation in this region. This code takes the DEM file and the coordinate list and outputs the Latitude and Longitude
+# of the highest point for each bounding box
+
 import gdal
 import numpy as np
 import affine
@@ -85,9 +89,11 @@ def getXY(lat,lon):
     return (x_coord,y_coord)
 
 # Processing Function
+# This function takes an array of the DEM image. Since the DEM image contains vast amounts of data, we consider only the region of interest
 # TODO Use more complicated functions instead of max
 def processRegion(x_min,y_min,array):
     # print(x_min,y_min,x_max,y_max,dem_width,dem_height)
+    # Get the index of the maximum value pair of the region
     index_of_highest = list(np.unravel_index(np.argmax(array, axis=None), array.shape))
     x_highest,y_highest = index_of_highest[0],index_of_highest[1]
     print(array.shape,x_highest,y_highest)
@@ -97,13 +103,14 @@ def processRegion(x_min,y_min,array):
 
 
 
-bounding_file = args[1]
-coord_file = args[2]
+bounding_file = args[1] # File with the bounding box list as (ymin,xmin,ymax,xmax) 
+coord_file = args[2] # Output file for the coordinates
 coords = open(bounding_file,'r')
 for x in coords.readlines():
     li = x.split('\t')
     y_min,x_min,y_max,x_max = int(li[0]),int(li[1]),int(li[2]),int(li[3])
     # ReadAsArray(x_min,y_min,x_len,y_len)
+    # Read the band data for the particular region
     area = band.ReadAsArray(x_min,y_min,x_max-x_min,y_max-y_min)
     processRegion(x_min,y_min,area)
 

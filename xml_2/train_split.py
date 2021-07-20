@@ -2,7 +2,7 @@ import numpy as np
 # import xml.etree.cElementTree as ET
 from lxml.etree import tostring
 import lxml.etree as ET
-    
+import newxml
 import cv2
 # box_list = [[20,20,40,40],[20,50,40,70],[20,80,40,100],[50,20,70,40],[50,50,70,70],[50,80,70,100],[80,20,100,40],[80,50,100,70],[80,80,100,100]]
 # final_height = 120
@@ -132,6 +132,9 @@ def createAnnotationXML(cfolder,cfilename,ofilename,cpath,cwidth,cheight,objects
         img = cv2.imread(cfilename[:-6]+".JPG")
         result = img[y_min:y_max,x_min:x_max]
         annotation = ET.Element("annotation")
+        cfilename = ofilename
+        cpath = output_dir+ofilename[:-4]+".JPG"
+        print(cfilename,cpath)
         folder = ET.SubElement(annotation,"folder").text= cfolder
         filename = ET.SubElement(annotation,"filename").text = cfilename
         path = ET.SubElement(annotation,"path").text = cpath
@@ -233,6 +236,7 @@ def split(file_xml,input_dir,output_dir):
 
 
     base_data = getAnnotatedData(tree,tags_to_search)
+    print(base_data)
     width = int(base_data["width"])
     height = int(base_data["height"])
     root = tree.getroot()
@@ -243,8 +247,9 @@ def split(file_xml,input_dir,output_dir):
     main_bb = []
     for a,b,c,d in zip(ymins,xmins,ymaxs,xmaxs):
         main_bb.append([int(a.text),int(b.text),int(c.text),int(d.text)])
-    main_bb_keys = getBBKeys(main_bb,width,height)
-    normalizeBBImgs(main_bb_keys,width,height)
+    main_bb_keys = newxml.newSplit(main_bb,height,width)
+    # normalizeBBImgs(main_bb_keys,width,height)
+
     for x,y in main_bb_keys.items():
         cfolder = base_data["folder"]
         cfilename = input_dir+base_data["filename"][:-4]+"_"+file_map[x]+".JPG"
@@ -259,6 +264,7 @@ def split(file_xml,input_dir,output_dir):
         region = (corner_y,corner_x,corner_y+cheight,corner_x+cwidth)
         createAnnotationXML(cfolder,cfilename,ofilename,cpath,cwidth,cheight,y,region,output_dir)
 
+    return True
 
 def YoloFormat(file_xml,input_dir,output_dir):
     tags_to_search = ['folder','filename','path','width','height']
@@ -287,26 +293,31 @@ def YoloFormat(file_xml,input_dir,output_dir):
 # python3 train_split.py input/ output/
 
 # PASCAL VOC
-# import sys
-# import os
-# args = sys.argv[1:]
-# input_dir = args[0]
-# output_dir = args[1]
-# import time
-# start = time.time()
-# input_files = os.listdir(input_dir)
-# input_xmls = []
+import sys
+import os
+args = sys.argv[1:]
+input_dir = args[0]
+output_dir = args[1]
+delete_flag = args[2]
+import time
+start = time.time()
+input_files = os.listdir(input_dir)
+input_xmls = []
 # input_jpgs = []
-# for x in input_files:
-#     if x.endswith(".xml"):
-#         input_xmls.append(x)
-#         input_jpgs.append(str(x)[:-3]+"JPG")
+for x in input_files:
+    if x.endswith(".xml"):
+        input_xmls.append(x)
+        # input_jpgs.append(str(x)[:-3]+"JPG")
 
-# for x in input_xmls:
-#     # print(input_dir+x)
-#     split(input_dir+x,input_dir,output_dir)
-
-# end = time.time()
+# print(input_xmls)
+for x in input_xmls:
+    # print(input_dir+x)
+    if(split(input_dir+x,input_dir,output_dir)):
+        if delete_flag == "t":
+            print("REMOVED:",input_dir+x,input_dir+x[:-3]+"JPG")
+            os.remove(input_dir+x)
+            os.remove(input_dir+x[:-4]+".JPG")
+end = time.time()
 
 # print(end-start)
 
@@ -328,22 +339,22 @@ def YoloFormat(file_xml,input_dir,output_dir):
 
 
 # Drawing Code
-import sys
-import os
-args = sys.argv[1:]
-input_dir = args[0]
-output_dir = args[1]
-import time
-start = time.time()
-input_files = os.listdir(input_dir)
-input_xmls = []
-input_jpgs = []
-for x in input_files:
-    if x.endswith(".xml"):
-        input_xmls.append(x)
-        # input_jpgs.append(str(x)[:-3]+"JPG")
-count = 0
-for x in input_xmls:
-    # print(input_dir+x)
-    getBB(x,input_dir,output_dir,count)
-    count+=1
+# import sys
+# import os
+# args = sys.argv[1:]
+# input_dir = args[0]
+# output_dir = args[1]
+# import time
+# start = time.time()
+# input_files = os.listdir(input_dir)
+# input_xmls = []
+# input_jpgs = []
+# for x in input_files:
+#     if x.endswith(".xml"):
+#         input_xmls.append(x)
+#         # input_jpgs.append(str(x)[:-3]+"JPG")
+# count = 0
+# for x in input_xmls:
+#     # print(input_dir+x)
+#     getBB(x,input_dir,output_dir,count)
+#     count+=1
