@@ -14,3 +14,7 @@ Unzip as is
     c.  Coordinates of coconut trees wrt the Ortho will be saved at `outputs/text_files/bounding_box.txt` <br>
 3.  Run `python3 elevation.py <DEM path> outputs/text_files/bounding_box.txt outputs/text_files/coord_height.txt ` <br>
     a.  The coordinates of the highest elevation of each coordinate box from bounding_box.txt will be saved into coord_height.txt
+
+### TODO
+
+a.  The cropping and splitting takes a very long time due to OpenCV having to literally load the entire image onto memory
