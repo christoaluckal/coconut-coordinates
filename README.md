@@ -4,7 +4,8 @@ a.  The function of this code is to be able to extract the coordinates of coconu
 b.  The code first takes the Orthomosaic image and determines the coordinates of the coconut trees using Tensorflow and the COCO API <br>
 c.  Then the elevation script reads the coordinates outputted by the Orthomosaic processing and finds the elevation of these coordinates using the DEM image <br>
 
-Download the files [here](https://1drv.ms/u/s!AiSJsfSikINmg40IF2dxOpKxb9LB3Q?e=g4r5Qd)<br>
+Download the model [here](https://1drv.ms/u/s!AiSJsfSikINmg40IF2dxOpKxb9LB3Q?e=g4r5Qd)<br>
+
 Unzip as is
 1.  Run the code <br> `python3 py_infer.py my_model/pipeline.config my_model/ exported_models/ my_model/label_map.pbtxt <image> outputs/predictions/ outputs/cropped_images/ outputs/text_files/bounding_box.txt ` <br>
     a. Input `y` if cropping is necessary, input the height and width (Standard DJI height x width is 3648x5472) <br>
