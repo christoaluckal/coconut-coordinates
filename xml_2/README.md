@@ -1,1 +1,3 @@
-init
+1.  The intuition behind these codes is simple. If you have a set of labelled images (Using LabelIMG) and you wish to downscale the image by half i.e. width//2 and height//2, you would have to manually relabel everything as the XMLs generated before downscaling correspond to the original image instead of the newer downscaled ones <br>
+2.  So what this code does is, loads one image and XML pair and gathers the bounding boxes in each XML. Then it tests if the bounding box is present either completely or partially in each quarter as well as the intermediate region between quarters. In total you have (2+1)\*(2+1)=9 bounding box tests. If a box passes a bounding box test, it is appended to the new XML created for each quarter, else it is discarded.
+3.  While you will expect certain edge cases to vanish, the code tries to preserve as many boxes it can, neglecting only boxes that have a width and height of less than 40px
